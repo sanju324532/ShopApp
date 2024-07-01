@@ -1,22 +1,29 @@
 <?php 
 include '../config.php';
 session_start();
-$shop_name = 'Shop XYZ';
-$msg = '';
-
 if($_SESSION['email'] == ""){
     header('Location: login_verify.php');
 }
 
 $email = $_SESSION['email'];
 $res = mysqli_query($conn, "SELECT * FROM customer WHERE email = '$email'");
-if(mysqli_num_rows($res)>0){
-    $row = mysqli_fetch_assoc($res);
+$row = mysqli_fetch_assoc($res);
+
+$customer_id = $_GET['customer_id'];
+
+$result = mysqli_query($conn,"SELECT * FROM customer WHERE customer_id ='$customer_id'");
+if(mysqli_num_rows($result)>0){
+    $cust = mysqli_fetch_array($result);
 }else{
     header('Location: login_verify.php');
 }
 
+$filter_array = array($row['customer_id']);
+$temp = $filter_array[0][0].$filter_array[0][1];
 
+if($temp != 'ED'){
+    header('Location:login_verify.php');
+}
 
 
 ?>
@@ -27,12 +34,13 @@ if(mysqli_num_rows($res)>0){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Web Application</title>
+    <title>Welcome Customer Page</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/x-icon" href="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel=”stylesheet” href=”https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css”>
 </head>
 <style type="text/css">
     .profile-picture {
@@ -241,12 +249,16 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="icon">
                 <div class="container">
-                    <a href="#">
+                    <a href="profile.php">
                     <img src="assets/images/profile.png" alt="home" style="width:55px;height:55px;">
                     </a>
                     <p class="text-center">प्रोफाइल</p>
                 </div>
             </div>
+            <?php
+            if($temp == 'ED'){
+
+            ?>
             <div class="icon">
                 <div class="container">
                     <a href="sell.php">
@@ -272,6 +284,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-center">Collect</p>
                 </div>
             </div>
+            <?php
+
+            }
+            ?>
             <div class="icon">
                 <div class="container">
                     <a href="termandcondition.php">
@@ -289,13 +305,11 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="container mt-3">
         <div class = "toast show p-2">  
             <div class = "toast-header"> 
-           
-                <img src="<?php echo $row['filepath']; ?>" height="144" width="144">
-              
-          </div>
+                <img src="<?php echo $cust['filepath']; ?>" height="144" width="144">
+            </div>
           <div class="col-md-6 p-4 ps-md-0">
-            <h5 class="mt-0 text-success">Customer : <?php echo $row['name']; ?> Registered...</h5>
-            <p>प्रिय श्रीमान/श्रीमती <?php echo $row['name']; ?> आपका स्वागत है। आपके जैसा ग्राहक पाकर बहुत खुशी हो रही है। आपने हमारे संगठन के साथ सफलतापूर्वक पंजीकरण कराया है और आपकी उपभोक्ता आईडी <?php echo $row['customer_id']; ?>  है और हमें आशा है कि आप हमारे संगठन का हिस्सा बनकर प्रसन्न महसूस करेंगे |</p>
+            <h5 class="mt-0">Customer : <?php echo $cust['name']; ?> Registered...</h5>
+            <p>प्रिय श्रीमान/श्रीमती <?php echo $cust['name']; ?> आपका स्वागत है। आपके जैसा ग्राहक पाकर बहुत खुशी हो रही है। आपने हमारे संगठन के साथ सफलतापूर्वक पंजीकरण कराया है और आपकी उपभोक्ता आईडी <?php echo $cust['customer_id']; ?>  है और हमें आशा है कि आप हमारे संगठन का हिस्सा बनकर प्रसन्न महसूस करेंगे |</p>
             <a href="#" class="stretched-link">Home</a>
           </div>
         </div>

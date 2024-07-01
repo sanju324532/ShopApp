@@ -1,10 +1,17 @@
 <?php 
 include '../config.php';
+session_start();
+if($_SESSION['email'] == ""){
+    header('Location: login_verify.php');
+}
 
-$name='customer name';
-$shop_name = 'Shop XYZ';
-
-
+$email = $_SESSION['email'];
+$res = mysqli_query($conn, "SELECT * FROM customer WHERE email = '$email'");
+if(mysqli_num_rows($res)>0){
+    $row = mysqli_fetch_assoc($res);
+}else{
+    header('Location: login_verify.php');
+}
 
 ?>
 
@@ -163,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <img src="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000" style="width:30px;height: 30px;"></span>
         <a class="navbar-brand" href="#"></a>
        <a class="nav-link dropdown-toggle navbar-toggler" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <img src="https://img.icons8.com/?size=100&id=kDoeg22e5jUY&format=png&color=000000" alt="Profile" class="profile-picture">
+            <img src="<?php echo $row['filepath']; ?>" alt="Profile" class="profile-picture">
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
             <a class="dropdown-item" href="#">Profile</a>
@@ -253,8 +260,16 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="icon">
                 <div class="container">
+                    <a href="collect.php">
+                    <img src="assets/images/payment.png" alt="home" style="width:55px;height:55px;">
+                    </a>
+                    <p class="text-center">Collect</p>
+                </div>
+            </div>
+            <div class="icon">
+                <div class="container">
                     <a href="#">
-                    <img src="https://img.icons8.com/?size=100&id=hxKYIOW0uvG5&format=png&color=000000" alt="tc" style="width:55px;height:55px;">
+                    <img src="assets/images/handshake.png" alt="tc" style="width:55px;height:55px;">
                     </a>
                     <p class="text-center">T&C</p>
                 </div>

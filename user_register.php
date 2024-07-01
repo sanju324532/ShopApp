@@ -1,20 +1,99 @@
 <?php 
 include '../config.php';
-
-$name='customer name';
+session_start();
+//common variables
 $shop_name = 'Shop XYZ';
+$error_message='';
+$msg = '';
 
+$email = $_SESSION['email'];
+$res = mysqli_query($conn, "SELECT * FROM customer WHERE email = '$email'");
+if(mysqli_num_rows($res)>0){
+    $row = mysqli_fetch_assoc($res);
+}else{
+    header('Location: login_verify.php');
+}
 
+$filter_array = array($row['customer_id']);
+$temp = $filter_array[0][0].$filter_array[0][1];
+
+if($_SERVER["REQUEST_METHOD"]=="POST" && isset($_FILES["image"])){
+
+    $sponser = trim($_POST['sponser']);
+    $fname = trim($_POST['fname']);
+    $lname = trim($_POST['lname']);
+    $email = trim($_POST['email']);
+    $mobile = trim($_POST['mobile']);
+    $address = $_POST['address'];
+    $password = $_POST['pass'];
+    $dob = $_POST['dob'];
+    $imgname = $_FILES["image"]["name"];
+    $tmp_name = $_FILES["image"]["tmp_name"];
+    $upload_dir = "assets/profile/";
+    
+    //allowed only
+
+    $file_type = mime_content_type($tmp_name);
+    $allowed_types = ['image/jpeg', 'image/jpg'];
+
+    if (!in_array($file_type, $allowed_types)) {
+        $msg = "<script>alert('Only JPG and JPEG formats are allowed.')</script>";
+        header('Refresh:0 url=user_register.php');
+        die($msg);
+    }
+
+    if($_FILES["image"]["size"] > 350000){
+        $msg = "<script>alert('image size should be less than 350 KB')</script>";
+        header('Refresh:0 url=user_register.php');
+        die($msg);
+    }
+
+    $q1 = "SELECT * FROM customer WHERE mobile = ? OR email= ? ";
+    $stmt = $conn->prepare($q1);
+    $stmt->bind_param("ss",$mobile,$email);
+    $stmt->execute();
+    $stmt->store_result();
+    if($stmt->num_rows > 0) {
+        $msg = "<script>alert('customer already register with mobile number or email')</script>";
+        die($msg);
+    }
+
+    $stmt->close();
+
+    $file_path = $upload_dir . basename($imgname);
+    if (move_uploaded_file($tmp_name, $file_path)) {
+        $imgContent = addslashes(file_get_contents($file_path));
+
+        $hashPassword = password_hash($password, PASSWORD_BCRYPT);
+
+        $customer_id = 'CR'.rand(100000,9999999);
+        $full = $fname." ".$lname;
+        $q2 = "INSERT INTO customer(sponser_id,name,email,mobile,address,password,customer_id,image_name,image,filepath,date_of_birth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt= $conn->prepare($q2);
+        $stmt->bind_param("sssssssssss",$sponser,$full,$email,$mobile,$address,$hashPassword,$customer_id,$imgname,$imgContent,$file_path,$dob);
+        if($stmt->execute()){
+
+            header("Location: welcome.php?customer_id=$customer_id");
+        }
+        else{
+            $error_message = 'Some error occured. please try later..!';
+        }
+        $stmt->close();
+    }else{
+        $msg = "<script>alert('failed to upload profile picture.')</script>";
+        die($msg);
+    }
+}else{
+    $msg = 'All field required!<br> image size should be less than or equal to 350 KB';
+}
 
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Web Application</title>
+    <title>Customer Registration Page</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/x-icon" href="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000">
@@ -114,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <img src="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000" style="width:30px;height: 30px;"></span>
         <a class="navbar-brand" href="#"></a>
        <a class="nav-link dropdown-toggle navbar-toggler" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <img src="https://img.icons8.com/?size=100&id=kDoeg22e5jUY&format=png&color=000000" alt="Profile" class="profile-picture">
+            <img src="<?php echo $row['filepath']; ?>" alt="Profile" class="profile-picture">
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
             <a class="dropdown-item" href="#">Profile</a>
@@ -185,6 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-center">प्रोफाइल</p>
                 </div>
             </div>
+            <?php
+                if($temp == 'ED'){
+            ?>
             <div class="icon">
                 <div class="container">
                     <a href="sell.php">
@@ -204,8 +286,19 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="icon">
                 <div class="container">
+                    <a href="collect.php">
+                    <img src="assets/images/payment.png" alt="home" style="width:55px;height:55px;">
+                    </a>
+                    <p class="text-center">Collect</p>
+                </div>
+            </div>
+            <?php
+            }
+            ?>
+            <div class="icon">
+                <div class="container">
                     <a href="termandcondition.php">
-                    <img src="https://img.icons8.com/?size=100&id=hxKYIOW0uvG5&format=png&color=000000" alt="tc" style="width:55px;height:55px;">
+                    <img src="assets/images/handshake.png" alt="tc" style="width:55px;height:55px;">
                     </a>
                     <p class="text-center">T&C</p>
                 </div>
@@ -224,45 +317,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>  
                 <div class = "toast-body">  
                 <section class="modal-container-body rtf">
-                        <form id="loginForm" action="" method="POST">
-                            <div class="form-group">
-                                <label for="font-awesome">Partner ID</label>
-                                <input type="text" class="form-control" id="fname" placeholder="Enter Partner ID" required name="sponser">
-                            </div>
-                            <div class="form-group">
-                                <label for="font-awesome">First Name</label>
-                                <input type="text" class="form-control" id="fname" placeholder="First Name" required name="fname">
-                            </div>
-                            <div class="form-group">
-                                <label for="lname">Last Name</label>
-                                <input type="text" class="form-control" id="lname" placeholder="Last Name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email address</label>
-                                <input type="email" class="form-control" id="email" placeholder="Enter email" required name="emailId">
-                            </div>
-                            <div class="form-group">
-                                <label for="mobile">Phone</label>
-                                <input type="tel" class="form-control" id="phone" placeholder="Enter Phone" required name="mobile">
-                            </div>
-                            <div class="form-group">
-                                <label for="address">Address</label>
-                                <input type="text" class="form-control" id="email" placeholder="Enter Address & Landmark" required name="address">
-                            </div>
-                            <div class="form-group">
-                                <label for="password">Password</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="password" placeholder="Password" required>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text" id="togglePassword">
-                                            <i class="fa fa-eye"></i>
-                                        </span>
-                                    </div>
-
+                    <form id="loginForm" action="" method="POST" enctype="multipart/form-data">
+                        <span class="text-danger"><b><?php echo $msg; ?></b></span>
+                        <div class="form-group">
+                            <label for="mobile">Profile image</label>
+                            <input type="file" class="form-control" id="phone" placeholder="Enter Phone" name="image" id="image" required>
+                            
+                        </div>
+                        <div class="form-group">
+                            <label for="font-awesome">Partner ID</label>
+                            <input type="text" class="form-control" id="partner" placeholder="Enter Partner ID" required name="sponser">
+                            
+                        </div>
+                        <div class="form-group">
+                            <label for="font-awesome">First Name</label>
+                            <input type="text" class="form-control" id="fname" placeholder="First Name" required name="fname">
+                        </div>
+                        <div class="form-group">
+                            <label for="lname">Last Name</label>
+                            <input type="text" class="form-control" id="lname" placeholder="Last Name" required name="lname">
+                        </div>
+                        <div class="form-group">
+                            <label for="lname">Date of Birth</label>
+                            <input type="date" class="form-control" id="dob" required name="dob">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email address</label>
+                            <input type="email" class="form-control" id="email" placeholder="Enter email" required name="email">
+                            
+                        </div>
+                        <div class="form-group">
+                            <label for="mobile">Phone</label>
+                            <input type="tel" class="form-control" id="phone" placeholder="Enter Phone" required name="mobile">
+                            
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <input type="text" class="form-control" id="email" placeholder="Enter Address & Landmark" required name="address">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" placeholder="Password" required name="pass">
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="togglePassword">
+                                        <i class="fa fa-eye"></i>
+                                    </span>
                                 </div>
+
                             </div>
-                            <button type="submit" class="btn btn-primary btn-block">Register!</button>
-                        </form>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" name="submit">Register!</button>
+                    </form>
+                    <span class="text-danger"><?php echo $error_message; ?></span>
                 </section> 
                 </div>  
             </div>  

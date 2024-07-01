@@ -1,9 +1,6 @@
 <?php 
 include '../config.php';
 session_start();
-$shop_name = 'Shop XYZ';
-$msg = '';
-
 if($_SESSION['email'] == ""){
     header('Location: login_verify.php');
 }
@@ -15,9 +12,6 @@ if(mysqli_num_rows($res)>0){
 }else{
     header('Location: login_verify.php');
 }
-
-
-
 
 ?>
 
@@ -35,7 +29,7 @@ if(mysqli_num_rows($res)>0){
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <style type="text/css">
-    .profile-picture {
+	.profile-picture {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -88,7 +82,7 @@ if(mysqli_num_rows($res)>0){
 </style>
 
 <script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', function() {
+	document.addEventListener('DOMContentLoaded', function() {
     var sidebarCollapse = document.getElementById('sidebarCollapse');
     var sidebar = document.getElementById('sidebar');
     var content = document.getElementById('content');
@@ -122,17 +116,17 @@ const bannerImages = [
 
 /* Example icons
 const icons = [
-    { name: 'Home', image: 'assets/images/home.png',link: 'User_panel_web_application.php',id: '#' },
+    { name: 'Home', image: 'assets/images/home.png',link: '#User_panel_web_application.php',id: '#' },
     { name: 'बेनिफिट्स', image: 'assets/images/inr.png',link: 'benefit.php',id: '#' },
     { name: 'वॉलेट', image: 'assets/images/savings.png', link: 'wallet.php', id: '#' },
     { name: 'ट्रांज़ैक्शन', image: 'assets/images/3d-report.png', link: 'transaction.php', id: '#' },
-    { name: 'प्रोफाइल', image: 'assets/images/profile.png', link: '#profile.php', id: '#' },
+    { name: 'प्रोफाइल', image: 'assets/images/profile.png', link: 'profile.php', id: '#' },
     { name: 'Today Sell', image: 'assets/images/growth.png', link: 'sell.php', id: '#'},
     { name: 'Refer', image: 'assets/images/add-user.png', link: 'user_register.php', id: '#'},
     { name: 'T&C', image: 'https://img.icons8.com/?size=100&id=hxKYIOW0uvG5&format=png&color=000000',link:'termandcondition.php',id:'#'}
     
-];*/
-
+];
+*/
 // Function to load banner images dynamically
 function loadBannerImages() {
     const carouselInner = document.getElementById('carousel-inner');
@@ -155,12 +149,13 @@ function loadIcons() {
             <a href="${icon.link}">
             <img src="${icon.image}" alt="${icon.name}" style="width:55px;height:55px;">
             </a>
-            <p class="text-center">${icon.name}</p></div>
+            <p class="text-center">${icon.name}</p>
+            </div>
         `;
         iconSection.appendChild(div);
     });
-}
-*/
+}*/
+
 // Initialize the dynamic content when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     loadBannerImages();
@@ -205,8 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <h5 class="text-center">Services</h5><hr>
         <div class="d-flex flex-wrap justify-content-center" id="icon-section">
             <!-- Icons will be inserted dynamically here -->
-            <div class="d-flex flex-wrap justify-content-center" id="icon-section">
-            <!-- Icons will be inserted dynamically here -->
             <div class="icon">
                 <div class="container">
                     <a href="User_panel_web_application.php">
@@ -241,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="icon">
                 <div class="container">
-                    <a href="#">
+                    <a href="profile.php">
                     <img src="assets/images/profile.png" alt="home" style="width:55px;height:55px;">
                     </a>
                     <p class="text-center">प्रोफाइल</p>
@@ -266,8 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="icon">
                 <div class="container">
-                    <a href="collect.php">
-                    <img src="assets/images/payment.png" alt="home" style="width:55px;height:55px;">
+                    <a href="#">
+                    <img src="assets/images/payment.php" alt="home" style="width:55px;height:55px;">
                     </a>
                     <p class="text-center">Collect</p>
                 </div>
@@ -282,48 +275,83 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             
         </div>
-            
-        </div>
     </div>
     <hr>
-    <div class="container mt-3">
+    <hr>
+    <div class = "container mt-3">   
         <div class = "toast show p-2">  
-            <div class = "toast-header"> 
-           
-                <img src="<?php echo $row['filepath']; ?>" height="144" width="144">
-              
-          </div>
-          <div class="col-md-6 p-4 ps-md-0">
-            <h5 class="mt-0 text-success">Customer : <?php echo $row['name']; ?> Registered...</h5>
-            <p>प्रिय श्रीमान/श्रीमती <?php echo $row['name']; ?> आपका स्वागत है। आपके जैसा ग्राहक पाकर बहुत खुशी हो रही है। आपने हमारे संगठन के साथ सफलतापूर्वक पंजीकरण कराया है और आपकी उपभोक्ता आईडी <?php echo $row['customer_id']; ?>  है और हमें आशा है कि आप हमारे संगठन का हिस्सा बनकर प्रसन्न महसूस करेंगे |</p>
-            <a href="#" class="stretched-link">Home</a>
-          </div>
-        </div>
-    </div>
+            <div class = "toast-header">  
+                <strong class = "me-auto"> Customer Amount Collection </strong>  
+                
+                </div>  
+                <div class = "toast-body">  
+                <section class="modal-container-body rtf">
+                    <form id="loginForm" action="" method="POST">
+                        <div class="form-group">
+                            <label for="font-awesome">Employee ID</label>
+                            <input type="text" class="form-control" id="customer" required name="sponser" readonly value="<?php ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="font-awesome">Customer ID</label>
+                            <input type="text" class="form-control" id="customer" placeholder="Enter Customer ID" required name="customerid">
+                        </div>
+                        <div class="form-group">
+                            <label for="font-awesome">Collected Amount (Rs.)</label>
+                            <input type="number" class="form-control" id="amount" placeholder="Enter Collected Amount" required name="amount">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">Employee PIN</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="password" placeholder="PIN" required name="epin">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" disabled>Collect</button>
+                    </form>
+                </section> 
+                </div>  
+            </div>  
+    </div>    
+    
+
+
     <br><hr><br>
-   <footer class="footer bg-dark text-center py-3">
+    <footer class="footer bg-dark text-center py-3">
         <div class="container">
             <span>&copy; <span id="year"></span> <?php echo $shop_name; ?>. All rights reserved.</span>
         </div>
     </footer>
 
-<link href = "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel = "stylesheet"> 
-    <script src = "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js">
-
-    <script src="scripts.js"></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-</body>
-</html>
-
-    
-
    
 
 <link href = "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel = "stylesheet"> 
     <script src = "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js">
+
+
+    	<!-- footer
+
+    	 <footer class="footer">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col">
+                    <a href="#"><i class="fas fa-home"></i></a>
+                </div>
+                <div class="col">
+                    <a href="#"><i class="fas fa-credit-card"></i></a>
+                </div>
+                <div class="col">
+                    <a href="#"><i class="fas fa-wallet"></i></a>
+                </div>
+                <div class="col">
+                    <a href="#"><i class="fas fa-qrcode"></i></a>
+                </div>
+                <div class="col">
+                    <a href="#"><i class="fas fa-question-circle"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>-->
+
 
     <script src="scripts.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

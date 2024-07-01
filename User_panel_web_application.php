@@ -1,10 +1,20 @@
 <?php 
 include '../config.php';
+session_start();
+if($_SESSION['email'] == ""){
+    header('Location: login_verify.php');
+}
 
-$name='customer name';
-$shop_name = 'Shop XYZ';
+$email = $_SESSION['email'];
+$res = mysqli_query($conn, "SELECT * FROM customer WHERE email = '$email'");
+if(mysqli_num_rows($res)>0){
+    $row = mysqli_fetch_assoc($res);
+}else{
+    header('Location: login_verify.php');
+}
 
-
+$filter_array = array($row['customer_id']);
+$temp = $filter_array[0][0].$filter_array[0][1];
 
 ?>
 
@@ -14,7 +24,7 @@ $shop_name = 'Shop XYZ';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Web Application</title>
+    <title><?php echo $row['name']; ?></title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/x-icon" href="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000">
@@ -162,15 +172,15 @@ document.addEventListener('DOMContentLoaded', () => {
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <span>
         <img src="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000" style="width:30px;height: 30px;"></span>
-        <a class="navbar-brand" href="#"></a>
+        <a class="navbar-brand" href="#"><?php echo $shop_name; ?></a>
        <a class="nav-link dropdown-toggle navbar-toggler" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <img src="https://img.icons8.com/?size=100&id=kDoeg22e5jUY&format=png&color=000000" alt="Profile" class="profile-picture">
+            <img src="<?php echo $row['filepath']; ?>" alt="Profile" class="profile-picture">
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
             <a class="dropdown-item" href="#">Profile</a>
             <a class="dropdown-item" href="#">Settings</a>
             <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="#">Logout</a>
+            <a class="dropdown-item" href="login_verify.php">Logout</a>
         </div>
     </nav>
     
@@ -190,7 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
             </a>
         </div>
         <hr>
-        <h5 class="text-center">Services</h5><hr>
+        
+        <h5 class="text-center">Portfolio Balance :- &#8377;<?php echo $row['wallet_balance']; ?></h5><hr>
         <div class="d-flex flex-wrap justify-content-center" id="icon-section">
             <!-- Icons will be inserted dynamically here -->
             <div class="icon">
@@ -233,6 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-center">प्रोफाइल</p>
                 </div>
             </div>
+
+            <?php
+                if($temp == 'ED'){
+            ?>
             <div class="icon">
                 <div class="container">
                     <a href="sell.php">
@@ -241,7 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-center">Today Sell</p>
                 </div>
             </div>
-
             <div class="icon">
                 <div class="container">
                     <a href="user_register.php">
@@ -250,10 +264,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-center">Refer</p>
                 </div>
             </div>
+            
+            <div class="icon">
+                <div class="container">
+                    <a href="collect.php">
+                    <img src="assets/images/payment.png" alt="home" style="width:55px;height:55px;">
+                    </a>
+                    <p class="text-center">Collect</p>
+                </div>
+            </div>
+            <?php
+            }
+            ?>
             <div class="icon">
                 <div class="container">
                     <a href="termandcondition.php">
-                    <img src="https://img.icons8.com/?size=100&id=hxKYIOW0uvG5&format=png&color=000000" alt="tc" style="width:55px;height:55px;">
+                    <img src="assets/images/handshake.png" alt="tc" style="width:55px;height:55px;">
                     </a>
                     <p class="text-center">T&C</p>
                 </div>

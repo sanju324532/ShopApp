@@ -1,8 +1,31 @@
 <?php
+include '../config.php';
+session_start();
+$name='';
+
+if($_SERVER["REQUEST_METHOD"]=="POST"){
+    
+    $email_id = $_POST['email'];
+    $password = $_POST['password'];
+
+    $hashPassword = password_hash($password, PASSWORD_BCRYPT);
+    $result = mysqli_query($conn,"SELECT * FROM customer WHERE email = '$email_id'");
+
+    if($result->num_rows > 0){
+        $row = mysqli_fetch_assoc($result);
+        if(password_verify($password, $row['password'])){
+            $_SESSION['email'] = $email_id;
+            header('Location: User_panel_web_application.php');
+        }else{
+            echo "<script>alert('Email or Password wrong.!')</script>";
+        }
+    }else{
+        echo "<script>alert('Something went wrong.!')</script>";
+        $conn->close();
+    }
 
 
-$name='customer name';
-$shop_name = 'Shop XYZ';
+}
 
 ?>
 <!DOCTYPE html>
@@ -15,6 +38,7 @@ $shop_name = 'Shop XYZ';
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/x-icon" href="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 </head>
 <style type="text/css">
 	body {
@@ -141,8 +165,9 @@ $shop_name = 'Shop XYZ';
     <!-- Main Content -->
     <div class="container mt-5">
         <div class="jumbotron text-center">
-            <h1>Welcome to Our <?php echo $shop_name; ?></h1>
-            <p>Advantages to connect with our organization.</p>
+            <!--h1>Welcome to Our <?php echo $shop_name; ?></h1>
+            <p>Advantages to connect with our organization.</p>-->
+            <img src="assets/images/logg.jpg" alt="logg image" width="313" heigh="176" />
         </div>
     </div>
 
@@ -152,27 +177,19 @@ $shop_name = 'Shop XYZ';
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h4>Login</h4>
+                        <h4>Authentication</h4>
                     </div>
                     <div class="card-body">
-                        <form id="loginForm">
-                            <div class="form-group">
-                                <label for="email">Login Type</label>
-                                <select name="loginType" class="form-control">
-                                    <option value="#" selected disabled>..select..</option>
-                                    <option value="customer">User Login</option>
-                                    <option value="employee">Employee Login</option>
-                                </select>
-                            </div>
+                        <form id="loginForm" action="" method="POST" enctype="multipart/form-data">
                             <div class="form-group">
                                 <label for="email">Email address</label>
-                                <input type="email" class="form-control" id="email" placeholder="Enter email" required>
+                                <input type="text" class="form-control" id="email" placeholder="Enter email"  name="email" required autocomplete="false" autosave="false" autofocus="false" />
                             </div>
 
                             <div class="form-group">
                                 <label for="password">Password</label>
                                 <div class="input-group">
-                                    <input type="password" class="form-control" id="password" placeholder="Password" required>
+                                    <input type="password" class="form-control" id="password" placeholder="Password" name="password" required>
                                     <div class="input-group-append">
                                         <span class="input-group-text" id="togglePassword">
                                             <i class="fa fa-eye"></i>
