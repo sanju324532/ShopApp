@@ -1,27 +1,49 @@
+
 <?php
 include '../config.php';
 session_start();
-$name='';
+$error_message='';
 
 if($_SERVER["REQUEST_METHOD"]=="POST"){
     
     $email_id = $_POST['email'];
     $password = $_POST['password'];
 
-    $hashPassword = password_hash($password, PASSWORD_BCRYPT);
-    $result = mysqli_query($conn,"SELECT * FROM customer WHERE email = '$email_id'");
+    if($email_id == $ADMIN_CREDENTIAL_U){
+        $stmt = $conn->prepare("SELECT * FROM customer WHERE email = ?");
+        $stmt->bind_param('s',$email_id);
 
-    if($result->num_rows > 0){
-        $row = mysqli_fetch_assoc($result);
-        if(password_verify($password, $row['password'])){
-            $_SESSION['email'] = $email_id;
-            header('Location: User_panel_web_application.php');
-        }else{
-            echo "<script>alert('Email or Password wrong.!')</script>";
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if($aow = $result->fetch_assoc()){
+            if(password_verify($password, $aow['password'])){
+                $_SESSION['email'] = $email_id;
+                $_SESSION['password'] = $password;
+                header('Location: admin_login.php');
+            }else{
+                $error_message='<div class="alert alert-danger">something went wrong! Login failed..</div>';
+            }
         }
     }else{
-        echo "<script>alert('Something went wrong.!')</script>";
-        $conn->close();
+
+        $stmt = $conn->prepare("SELECT * FROM customer WHERE email = ?");
+        $stmt->bind_param('s',$email_id);
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if($row = $result->fetch_assoc()){
+
+            if(password_verify($password, $row['password'])){
+                $_SESSION['email'] = $email_id;
+                $_SESSION['password'] = $password;
+                setcookie($email_id,time() + (86400 * 30));
+                header('Location: User_panel_web_application.php');
+            }else{
+                $error_message='<div class="alert alert-danger">something went wrong! Login failed..</div>';
+            }
+        }else{
+            $error_message='<div class="alert alert-danger">something went wrong! Login failed..</div>';
+        }
     }
 
 
@@ -36,7 +58,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     <title><?php echo $shop_name; ?></title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000">
+    <link rel="icon" type="image/x-icon" href="assets/images/shoplogo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 </head>
@@ -60,7 +82,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     position: fixed;
     top: 0;
     left: -250px;
-    background-color: #343a40;
+    background-color: #007bff;
     color: white;
     transition: 0.3s;
     padding-top: 60px;
@@ -133,8 +155,8 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
 <body>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-dark bg-dark">
-        <a class="navbar-brand" href="#"><?php echo $shop_name; ?></a>
+    <nav class="navbar navbar-light bg-primary">
+        <a class="navbar-brand text-light" href="#"><?php echo $shop_name; ?></a>
         <button class="navbar-toggler" type="button" id="sidebarCollapse">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -143,7 +165,11 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     <!-- Sidebar -->
     <div id="sidebar" class="sidebar">
         <ul class="list-unstyled components">
+
            <li>
+               <h5><b> <?php echo $shop_name; ?> </b> </h5>
+            </li>
+            <li>
                 <a href="#home">Home</a>
             </li>
             <li>
@@ -167,18 +193,11 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
         <div class="jumbotron text-center">
             <!--h1>Welcome to Our <?php echo $shop_name; ?></h1>
             <p>Advantages to connect with our organization.</p>-->
-            <img src="assets/images/logg.jpg" alt="logg image" width="313" heigh="176" />
-        </div>
-    </div>
-
-    <!-- Login Form -->
-    <div class="container mt-5">
+            <img src="assets/images/shoplogo.png" alt="logg image" width="88" heigh="49" />
+    
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <div class="card">
-                    <div class="card-header text-center">
-                        <h4>Authentication</h4>
-                    </div>
                     <div class="card-body">
                         <form id="loginForm" action="" method="POST" enctype="multipart/form-data">
                             <div class="form-group">
@@ -188,8 +207,8 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
 
                             <div class="form-group">
                                 <label for="password">Password</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="password" placeholder="Password" name="password" required>
+                                <div class="input-group"> 
+                                    <input type="password" class="form-control" id="password" placeholder="Password" name="password" required />
                                     <div class="input-group-append">
                                         <span class="input-group-text" id="togglePassword">
                                             <i class="fa fa-eye"></i>
@@ -199,6 +218,8 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
                             </div>
                             <button type="submit" class="btn btn-primary btn-block">Login</button>
                         </form>
+                        <br>
+                        <?php echo $error_message; ?>
                     </div>
                 </div>
             </div>

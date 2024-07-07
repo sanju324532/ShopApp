@@ -1,11 +1,17 @@
 <?php 
 include '../config.php';
 session_start();
-if($_SESSION['email'] == ""){
-    header('Location: login_verify.php');
+$wc_cust = $_GET['customer_id'];
+$qu = mysqli_query($conn,"SELECT * FROM customer WHERE customer_id = '$wc_cust'");
+if(mysqli_num_rows($qu)>0){
+    $cust = mysqli_fetch_array($qu);
+}else{
+    header('Location:emp.php');
 }
+
 $email = $_SESSION['email'];
 $password = $_SESSION['password'];
+
 $stmt = $conn->prepare("SELECT * FROM customer WHERE email = ?");
 $stmt->bind_param('s', $email);
 $stmt->execute();
@@ -17,23 +23,14 @@ if($row = $result->fetch_assoc()){
 }else{
     header('Location:login_verify.php');
 }
-$ud = "".date('d-m-Y');
-$pid = $row['customer_id'];
-$stmt = $conn->prepare("SELECT amount FROM transaction WHERE partner_id = ? AND tdate = ?");
-$stmt->bind_param('ss', $pid, $ud);
-$stmt->execute();
-$ji = $stmt->get_result();
-if($ji->num_rows>0){
-    $am=0;
-    while($pow = $ji->fetch_assoc()){
-        $am+=$pow['amount'];
-    }
-}else{
-    $am=0;
+
+$filter_array = array($row['email']);
+$temp = $filter_array[0][0].$filter_array[0][1];
+
+if($temp != 'ad'){
+    header('Location:login_verify.php');
 }
 
-$filter_array = array($row['customer_id']);
-$temp = $filter_array[0][0].$filter_array[0][1];
 
 
 ?>
@@ -52,7 +49,7 @@ $temp = $filter_array[0][0].$filter_array[0][1];
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <style type="text/css">
-	.profile-picture {
+    .profile-picture {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -105,7 +102,7 @@ $temp = $filter_array[0][0].$filter_array[0][1];
 </style>
 
 <script type="text/javascript">
-	document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
     var sidebarCollapse = document.getElementById('sidebarCollapse');
     var sidebar = document.getElementById('sidebar');
     var content = document.getElementById('content');
@@ -196,8 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <img src="<?php echo $row['filepath']; ?>" alt="Profile" class="profile-picture">
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
-            <a class="dropdown-item" href="profile.php">Profile</a>
-            <a class="dropdown-item" href="generate_pin.php">Account Manage</a>
+            <a class="dropdown-item" href="#">Profile</a>
+            <a class="dropdown-item" href="#">Account Manage</a>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="login_verify.php">Logout</a>
         </div>
@@ -221,155 +218,51 @@ document.addEventListener('DOMContentLoaded', () => {
             </a>
         </div>
         <hr>
-        <?php if($temp == 'CR'){?>
-        <h4 class="text-center text-dark">Balance :- &#8377;<?php echo $row['wallet_balance']; ?></h4>
-        <?php }
-        else if($temp == 'ED'){
-        ?>
-        <h4 class="text-center text-dark">Today Collection :- &#8377;<?php echo $am; ?></h4>
-        <?php } ?>
-        <hr>
         <div class="d-flex flex-wrap justify-content-center" id="icon-section">
             <!-- Icons will be inserted dynamically here -->
             <div class="icon">
                 <div class="container">
-                    <a href="#">
+                    <a href="admin_login.php">
                     <img src="assets/images/home.png" alt="home">
                     </a>
                     <p class="text-center">Home</p>
                 </div>
             </div>
-            <div class="icon">
-                <div class="container">
-                    <a href="benefit.php">
-                    <img src="assets/images/benefit.png" alt="home">
-                    </a>
-                    <p class="text-center">Benefits</p>
-                </div>
-            </div>
-            <?php
-                if($temp=='CR'){
-            ?>
-            <div class="icon">
-                <div class="container">
-                    <a href="wallet.php">
-                    <img src="assets/images/wallet.png" alt="home">
-                    </a>
-                    <p class="text-center">Wallet</p>
-                </div>
-            </div>
-            <?php
-                }
-            ?>
-            <div class="icon">
-                <div class="container">
-                    <a href="transaction.php">
-                    <img src="assets/images/transaction.png" alt="home">
-                    </a>
-                    <p class="text-center">Transaction</p>
-                </div>
-            </div>
-            <div class="icon">
-                <div class="container">
-                    <a href="profile.php">
-                    <img src="assets/images/profile.png" alt="home">
-                    </a>
-                    <p class="text-center">Profile</p>
-                </div>
-            </div>
-
-            <?php
-                if($temp == 'ED'){
-            ?>
-            <div class="icon">
-                <div class="container">
-                    <a href="sell.php">
-                    <img src="assets/images/growth.png" alt="home">
-                    </a>
-                    <p class="text-center">Collection</p>
-                </div>
-            </div>
-            <div class="icon">
-                <div class="container">
-                    <a href="user_register.php">
-                    <img src="assets/images/add-user.png" alt="home">
-                    </a>
-                    <p class="text-center">Refer</p>
-                </div>
-            </div>
             
             <div class="icon">
                 <div class="container">
-                    <a href="collect.php">
-                    <img src="assets/images/money.png" alt="home">
+                    <a href="tp.php">
+                    <img src="assets/images/transaction.png" alt="home">
                     </a>
-                    <p class="text-center">Collect</p>
+                    <p class="text-center">Total Transaction</p>
                 </div>
             </div>
-            <?php
-            }
-            ?>
             <div class="icon">
                 <div class="container">
-                    <a href="termandcondition.php">
-                    <img src="assets/images/policy.png" alt="tc">
+                    <a href="emp.php">
+                    <img src="assets/images/add-user.png" alt="home">
                     </a>
-                    <p class="text-center">Policy</p>
+                    <p class="text-center">Add-Employee</p>
                 </div>
             </div>
             
         </div>
     </div>
     <hr>
+    <div class="container mt-3">
+        <div class = "toast show p-2">  
+            <div class = "toast-header"> 
+                <img src="<?php echo $cust['filepath']; ?>" height="144" width="144">
+            </div>
+          <div class="col-md-6 p-4 ps-md-0">
+            <h5 class="mt-0">Employee : <?php echo $cust['name']; ?></h5>
+            <p>प्रिय श्रीमान/श्रीमती <?php echo $cust['name']; ?> आपका स्वागत है। आपका हमारे संगठन के साथ सफलतापूर्वक पंजीकरण चूका है और आपका आईडी <?php echo $cust['customer_id']; ?>  है और हमें आशा है कि आप हमारे संगठन का हिस्सा बनकर प्रसन्न महसूस करेंगे |</p>
+            <a href="#" class="stretched-link">Home</a>
+          </div>
+        </div>
+    </div>
+    <br><hr><br>
     
-    
-
-
-
-    <div class="container">
-    <div class="table-responsive border-primary">
-        <table class="table">
-        <thead class="primary">
-            <td>No.</td>
-            <td>ID</td>
-            <td>Date</td>
-            <td>Amount</td>
-            <td>To Pay</td>
-        </thead>
-        
-    <?php 
-    $id = $row['customer_id'];
-    if($temp == 'ED'){
-        $stmt = $conn->prepare("SELECT * FROM transaction WHERE partner_id = ? LIMIT 10");
-    }else{
-        $stmt = $conn->prepare("SELECT * FROM transaction WHERE customer_id = ? LIMIT 10");
-    }
-    $stmt->bind_param('s', $id);
-    $stmt->execute();
-    $res = $stmt->get_result();
-
-    if($res->num_rows>0){
-        
-        while($tow = $res->fetch_assoc()) {
-            $i = 1;
-
-      
-        echo '
-        <tr>
-            <td>'.$i.'</td>
-            <td>'.$tow['customer_id'].'</td>
-            <td>'.$tow['tdate'].'</td>
-            <td class="text-success"><i class="fa fa-inr">&#8377;</i>'.$tow['amount'].'</td>
-            <td>'.$tow['collected_by'].'</td>
-            </tr>';
-            $i++;
-            }
-        }else{
-            echo '<td colspan="5" class="text-danger text-center">No Records ('.date("l jS \of F Y").')</td>';
-        }
-        ?>
-        </tr>
-    </table>
     </div></div>
     <script src="scripts.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

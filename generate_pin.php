@@ -1,9 +1,12 @@
 <?php 
+date_default_timezone_set('Asia/Kolkata');
 include '../config.php';
 session_start();
 if($_SESSION['email'] == ""){
     header('Location: login_verify.php');
 }
+$status = '';
+$error_message = '';
 $email = $_SESSION['email'];
 $password = $_SESSION['password'];
 $stmt = $conn->prepare("SELECT * FROM customer WHERE email = ?");
@@ -17,23 +20,44 @@ if($row = $result->fetch_assoc()){
 }else{
     header('Location:login_verify.php');
 }
-$ud = "".date('d-m-Y');
-$pid = $row['customer_id'];
-$stmt = $conn->prepare("SELECT amount FROM transaction WHERE partner_id = ? AND tdate = ?");
-$stmt->bind_param('ss', $pid, $ud);
-$stmt->execute();
-$ji = $stmt->get_result();
-if($ji->num_rows>0){
-    $am=0;
-    while($pow = $ji->fetch_assoc()){
-        $am+=$pow['amount'];
-    }
-}else{
-    $am=0;
-}
 
 $filter_array = array($row['customer_id']);
 $temp = $filter_array[0][0].$filter_array[0][1];
+
+if($temp != 'CR'){
+    header('Location:login_verify.php');
+}
+$stmt->close();
+if($_SERVER['REQUEST_METHOD'] == 'POST'){
+    $status = 'disabled';
+    $cid = $row['customer_id'];
+    $epin = $_POST['epin'];
+    $password = $_POST['password'];
+
+    try{
+        if($row['tpin'] == '')
+        {
+            if(password_verify($password, $row['password'])){
+                $stmt = $conn->prepare("UPDATE customer SET tpin = ? WHERE customer_id = ?");
+                $stmt->bind_param('is', $epin, $cid);
+                $stmt->execute();
+
+                $success = 'आपका ट्रांसक्शन पिन सफलतापूर्वक बन चूका है |';
+                $status = '';
+                $stmt->close();
+            }else{
+                $error_message = 'एंटर किया गया पासवर्ड गलत है |';
+                $status = '';
+            }
+        }
+    }catch(Exception $e){
+        $error_message = "".$e->getMessage();
+        $status = '';
+    }
+
+}
+
+
 
 
 ?>
@@ -52,7 +76,7 @@ $temp = $filter_array[0][0].$filter_array[0][1];
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <style type="text/css">
-	.profile-picture {
+    .profile-picture {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -105,7 +129,7 @@ $temp = $filter_array[0][0].$filter_array[0][1];
 </style>
 
 <script type="text/javascript">
-	document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
     var sidebarCollapse = document.getElementById('sidebarCollapse');
     var sidebar = document.getElementById('sidebar');
     var content = document.getElementById('content');
@@ -139,17 +163,17 @@ const bannerImages = [
 
 /* Example icons
 const icons = [
-    { name: 'Home', image: 'assets/images/home.png',link: '#User_panel_web_application.php',id: '#' },
+    { name: 'Home', image: 'assets/images/home.png',link: 'User_panel_web_application.php',id: '#' },
     { name: 'बेनिफिट्स', image: 'assets/images/inr.png',link: 'benefit.php',id: '#' },
-    { name: 'वॉलेट', image: 'assets/images/savings.png', link: 'wallet.php', id: '#' },
+    { name: 'वॉलेट', image: 'assets/images/savings.png', link: '#wallet.php', id: '#' },
     { name: 'ट्रांज़ैक्शन', image: 'assets/images/3d-report.png', link: 'transaction.php', id: '#' },
     { name: 'प्रोफाइल', image: 'assets/images/profile.png', link: 'profile.php', id: '#' },
     { name: 'Today Sell', image: 'assets/images/growth.png', link: 'sell.php', id: '#'},
     { name: 'Refer', image: 'assets/images/add-user.png', link: 'user_register.php', id: '#'},
     { name: 'T&C', image: 'https://img.icons8.com/?size=100&id=hxKYIOW0uvG5&format=png&color=000000',link:'termandcondition.php',id:'#'}
     
-];
-*/
+];*/
+
 // Function to load banner images dynamically
 function loadBannerImages() {
     const carouselInner = document.getElementById('carousel-inner');
@@ -172,8 +196,7 @@ function loadIcons() {
             <a href="${icon.link}">
             <img src="${icon.image}" alt="${icon.name}" style="width:55px;height:55px;">
             </a>
-            <p class="text-center">${icon.name}</p>
-            </div>
+            <p class="text-center">${icon.name}</p></div>
         `;
         iconSection.appendChild(div);
     });
@@ -191,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-primary fixed-top">
 
-        <a class="navbar-brand text-light" href="#" style="font-family: fantasy;">दुकानदार स्वास्थ सेवा</a>
+        <a class="navbar-brand text-light" href="#" style="font-family: fantasy;">दुकानदार स्वास्थ ऍप</a>
        <a class="nav-link dropdown-toggle navbar-toggler" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <img src="<?php echo $row['filepath']; ?>" alt="Profile" class="profile-picture">
         </a>
@@ -221,19 +244,13 @@ document.addEventListener('DOMContentLoaded', () => {
             </a>
         </div>
         <hr>
-        <?php if($temp == 'CR'){?>
-        <h4 class="text-center text-dark">Balance :- &#8377;<?php echo $row['wallet_balance']; ?></h4>
-        <?php }
-        else if($temp == 'ED'){
-        ?>
-        <h4 class="text-center text-dark">Today Collection :- &#8377;<?php echo $am; ?></h4>
-        <?php } ?>
-        <hr>
+        
+        <h4 class="text-center text-dark">Balance :- &#8377;<?php echo $row['wallet_balance']; ?></h4><hr>
         <div class="d-flex flex-wrap justify-content-center" id="icon-section">
             <!-- Icons will be inserted dynamically here -->
             <div class="icon">
                 <div class="container">
-                    <a href="#">
+                    <a href="User_panel_web_application.php">
                     <img src="assets/images/home.png" alt="home">
                     </a>
                     <p class="text-center">Home</p>
@@ -321,56 +338,85 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     </div>
     <hr>
+
     
+    <div class = "container mt-3">   
+        <div class = "toast show p-2">  
+            <div class = "toast-header">  
+                <strong class = "me-auto"> Customer Amount Collection </strong>  
+                
+                </div>  
+                <div class = "toast-body">  
+                <section class="modal-container-body rtf">
+                    <div class="alert alert-danger"> ट्रांसक्शन पिन केवल एक ही बार बना सकते है बाद में चेंज नहीं होगा।  </div>
+                    <form id="loginForm" method="POST">
+                        <div class="form-group">
+                            <label for="font-awesome">Name</label>
+                            <input type="text" class="form-control" id="customer" required name="customerid" value="<?php echo strtoupper($row['name']); ?>" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="font-awesome">Customer ID</label>
+                            <input type="text" class="form-control" id="customer" placeholder="Enter Customer ID" required name="customerid" value="<?php echo $row['customer_id']; ?>" readonly>
+                        </div>
+                        <?php if($row['tpin'] == ''){ ?>
+                        <div class="form-group">
+                            <label for="password">Enter Your PIN</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="password" placeholder="PIN"  required name="epin" maxlength="6">
+                            </div>
+                        </div>
+                        <?php } ?>
+                        <?php if($row['tpin'] != ''){?>
+                        <div class="form-group">
+                            <label for="password">Your PIN</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="password" maxlength="6" value="<?php echo $row['tpin']; ?>" name="epin" readonly />
+                            </div>
+                        </div>
+                        <?php } ?>
+                        <?php 
+                        if($row['tpin'] !=''){
+                        ?>
+                        <div class="alert alert-success">आपका ट्रांसक्शन पिन बन चूका है |</div>
+                        <?php } ?>
+
+                        <?php if($row['tpin'] == ''){?>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="input-group"> 
+                                <input type="password" class="form-control" id="password" placeholder="Password" name="password" required />
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="togglePassword">
+                                        <i class="fa fa-eye"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <?php } ?>
+                        <?php if($row['tpin'] == ''){?>
+                            <button type="submit" class="btn btn-primary btn-block">Generate PIN</button><?php } ?>
+                    </form><br>
+                    <?php 
+                        if($error_message !=''){
+
+                    ?>
+                    <div class="alert alert-danger"> <?php echo $error_message; ?> 
+
+                    </div>
+                    <?php }?>
+                    
+                </section> 
+                </div>  
+            </div>  
+    </div>
+    <br><hr><br>
     
 
+   
 
+<link href = "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel = "stylesheet"> 
+    <script src = "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js">
 
-    <div class="container">
-    <div class="table-responsive border-primary">
-        <table class="table">
-        <thead class="primary">
-            <td>No.</td>
-            <td>ID</td>
-            <td>Date</td>
-            <td>Amount</td>
-            <td>To Pay</td>
-        </thead>
-        
-    <?php 
-    $id = $row['customer_id'];
-    if($temp == 'ED'){
-        $stmt = $conn->prepare("SELECT * FROM transaction WHERE partner_id = ? LIMIT 10");
-    }else{
-        $stmt = $conn->prepare("SELECT * FROM transaction WHERE customer_id = ? LIMIT 10");
-    }
-    $stmt->bind_param('s', $id);
-    $stmt->execute();
-    $res = $stmt->get_result();
-
-    if($res->num_rows>0){
-        
-        while($tow = $res->fetch_assoc()) {
-            $i = 1;
-
-      
-        echo '
-        <tr>
-            <td>'.$i.'</td>
-            <td>'.$tow['customer_id'].'</td>
-            <td>'.$tow['tdate'].'</td>
-            <td class="text-success"><i class="fa fa-inr">&#8377;</i>'.$tow['amount'].'</td>
-            <td>'.$tow['collected_by'].'</td>
-            </tr>';
-            $i++;
-            }
-        }else{
-            echo '<td colspan="5" class="text-danger text-center">No Records ('.date("l jS \of F Y").')</td>';
-        }
-        ?>
-        </tr>
-    </table>
-    </div></div>
     <script src="scripts.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>

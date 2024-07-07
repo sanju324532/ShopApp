@@ -4,9 +4,9 @@ session_start();
 //common variables
 $error_message='';
 $msg = '';
-
 $email = $_SESSION['email'];
 $password = $_SESSION['password'];
+
 $stmt = $conn->prepare("SELECT * FROM customer WHERE email = ?");
 $stmt->bind_param('s', $email);
 $stmt->execute();
@@ -17,29 +17,6 @@ if($row = $result->fetch_assoc()){
     }
 }else{
     header('Location:login_verify.php');
-}
-
-$filter_array = array($row['customer_id']);
-$temp = $filter_array[0][0].$filter_array[0][1];
-
-if($temp != 'ED'){
-    header('Location:login_verify.php');
-}
-
-
-$ud = "".date('d-m-Y');
-$pid = $row['customer_id'];
-$stmt = $conn->prepare("SELECT amount FROM transaction WHERE partner_id = ? AND tdate = ?");
-$stmt->bind_param('ss', $pid, $ud);
-$stmt->execute();
-$ji = $stmt->get_result();
-if($ji->num_rows>0){
-    $am=0;
-    while($pow = $ji->fetch_assoc()){
-        $am+=$pow['amount'];
-    }
-}else{
-    $am=0;
 }
 
 if($_SERVER["REQUEST_METHOD"]=="POST" && isset($_FILES["image"])){
@@ -79,7 +56,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST" && isset($_FILES["image"])){
     $stmt->execute();
     $stmt->store_result();
     if($stmt->num_rows > 0) {
-        $msg = "<script>alert('customer already register with mobile number or email')</script>";
+        $msg = "<script>alert('employee already register with mobile number or email')</script>";
         die($msg);
     }
 
@@ -91,14 +68,14 @@ if($_SERVER["REQUEST_METHOD"]=="POST" && isset($_FILES["image"])){
 
         $hashPassword = password_hash($password, PASSWORD_BCRYPT);
 
-        $customer_id = 'CR'.rand(100000,9999999);
+        $customer_id = 'ED'.rand(100000,9999999);
         $full = $fname." ".$lname;
         $q2 = "INSERT INTO customer(sponser_id,name,email,mobile,address,password,customer_id,image_name,image,filepath,date_of_birth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt= $conn->prepare($q2);
         $stmt->bind_param("sssssssssss",$sponser,$full,$email,$mobile,$address,$hashPassword,$customer_id,$imgname,$imgContent,$file_path,$dob);
         if($stmt->execute()){
 
-            header("Location: welcome.php?customer_id=$customer_id");
+            header("Location: wc.php?customer_id=$customer_id");
         }
         else{
             $error_message = 'Some error occured. please try later..!';
@@ -212,16 +189,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-primary fixed-top">
+<nav class="navbar navbar-expand-lg navbar-light bg-primary fixed-top">
 
-        <a class="navbar-brand text-light" href="#" style="font-family: fantasy;">दुकानदार स्वास्थ ऍप</a>
+        <a class="navbar-brand text-light" href="#" style="font-family: fantasy;">दुकानदार स्वास्थ सेवा</a>
        <a class="nav-link dropdown-toggle navbar-toggler" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <img src="<?php echo $row['filepath']; ?>" alt="Profile" class="profile-picture">
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
-            <a class="dropdown-item" href="profile.php">Profile</a>
-            <a class="dropdown-item" href="generate_pin.php">Account Manage</a>
+            <a class="dropdown-item" href="#">Profile</a>
+            <a class="dropdown-item" href="#">Account Manage</a>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="login_verify.php">Logout</a>
         </div>
@@ -245,94 +221,31 @@ document.addEventListener('DOMContentLoaded', () => {
             </a>
         </div>
         <hr>
-        
-        <h4 class="text-center text-dark">Today Collection :- &#8377;<?php echo $am; ?></h4><hr>
         <div class="d-flex flex-wrap justify-content-center" id="icon-section">
             <!-- Icons will be inserted dynamically here -->
             <div class="icon">
                 <div class="container">
-                    <a href="User_panel_web_application.php">
+                    <a href="admin_login.php">
                     <img src="assets/images/home.png" alt="home">
                     </a>
                     <p class="text-center">Home</p>
                 </div>
             </div>
-            <div class="icon">
-                <div class="container">
-                    <a href="benefit.php">
-                    <img src="assets/images/benefit.png" alt="home">
-                    </a>
-                    <p class="text-center">Benefits</p>
-                </div>
-            </div>
-            <?php
-                if($temp=='CR'){
-            ?>
-            <div class="icon">
-                <div class="container">
-                    <a href="wallet.php">
-                    <img src="assets/images/wallet.png" alt="home">
-                    </a>
-                    <p class="text-center">Wallet</p>
-                </div>
-            </div>
-            <?php
-                }
-            ?>
-            <div class="icon">
-                <div class="container">
-                    <a href="transaction.php">
-                    <img src="assets/images/transaction.png" alt="home">
-                    </a>
-                    <p class="text-center">Transaction</p>
-                </div>
-            </div>
-            <div class="icon">
-                <div class="container">
-                    <a href="profile.php">
-                    <img src="assets/images/profile.png" alt="home">
-                    </a>
-                    <p class="text-center">Profile</p>
-                </div>
-            </div>
-
-            <?php
-                if($temp == 'ED'){
-            ?>
-            <div class="icon">
-                <div class="container">
-                    <a href="sell.php">
-                    <img src="assets/images/growth.png" alt="home">
-                    </a>
-                    <p class="text-center">Collection</p>
-                </div>
-            </div>
-            <div class="icon">
-                <div class="container">
-                    <a href="#">
-                    <img src="assets/images/add-user.png" alt="home">
-                    </a>
-                    <p class="text-center">Refer</p>
-                </div>
-            </div>
             
             <div class="icon">
                 <div class="container">
-                    <a href="collect.php">
-                    <img src="assets/images/money.png" alt="home">
+                    <a href="tp.php">
+                    <img src="assets/images/transaction.png" alt="home">
                     </a>
-                    <p class="text-center">Collect</p>
+                    <p class="text-center">Total Transaction</p>
                 </div>
             </div>
-            <?php
-            }
-            ?>
             <div class="icon">
                 <div class="container">
-                    <a href="termandcondition.php">
-                    <img src="assets/images/policy.png" alt="tc">
+                    <a href="emp.php">
+                    <img src="assets/images/add-user.png" alt="home">
                     </a>
-                    <p class="text-center">Policy</p>
+                    <p class="text-center">Add-Employee</p>
                 </div>
             </div>
             
@@ -340,12 +253,10 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
     <hr>
 
-
-
     <div class = "container mt-3">   
         <div class = "toast show p-2">  
             <div class = "toast-header">  
-                <strong class = "me-auto"> Register Customer </strong>  
+                <strong class = "me-auto">  Employee Registration </strong>  
                 
                 </div>  
                 <div class = "toast-body">  
@@ -358,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                         </div>
                         <div class="form-group">
-                            <label for="font-awesome">Partner ID</label>
+                            <label for="font-awesome">ADMIN ID</label>
                             <input type="text" class="form-control" id="partner" placeholder="Enter Partner ID" required name="sponser" value="<?php echo $row['customer_id']; ?>" readonly>
                             
                         </div>
@@ -397,7 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <i class="fa fa-eye"></i>
                                     </span>
                                 </div>
-
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block" name="submit">Register!</button>

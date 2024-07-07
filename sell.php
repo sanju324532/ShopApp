@@ -6,11 +6,43 @@ if($_SESSION['email'] == ""){
 }
 
 $email = $_SESSION['email'];
-$res = mysqli_query($conn, "SELECT * FROM customer WHERE email = '$email'");
-if(mysqli_num_rows($res)>0){
-    $row = mysqli_fetch_assoc($res);
+$password = $_SESSION['password'];
+$stmt = $conn->prepare("SELECT * FROM customer WHERE email = ?");
+$stmt->bind_param('s', $email);
+$stmt->execute();
+$result = $stmt->get_result();
+if($row = $result->fetch_assoc()){
+    if(!password_verify($password, $row['password'])){
+        header('Location:login_verify.php');
+    }
 }else{
-    header('Location: login_verify.php');
+    header('Location:login_verify.php');
+}
+
+
+$ud = "".date('d-m-Y');
+$pid = $row['customer_id'];
+$stmt = $conn->prepare("SELECT amount FROM transaction WHERE partner_id = ? AND tdate = ?");
+$stmt->bind_param('ss', $pid, $ud);
+$stmt->execute();
+$ji = $stmt->get_result();
+if($ji->num_rows>0){
+    $am=0;
+    while($pow = $ji->fetch_assoc()){
+        $am+=$pow['amount'];
+    }
+}else{
+    $am=0;
+}
+
+
+
+
+$filter_array = array($row['customer_id']);
+$temp = $filter_array[0][0].$filter_array[0][1];
+
+if($temp != 'ED'){
+    header('Location:login_verify.php');
 }
 
 ?>
@@ -21,10 +53,10 @@ if(mysqli_num_rows($res)>0){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Web Application</title>
+    <title><?php echo $row['name']; ?></title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000">
+    <link rel="icon" href="assets/images/shoplogo.png">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
@@ -109,9 +141,9 @@ if(mysqli_num_rows($res)>0){
 
 // Example banner images
 const bannerImages = [
-    'https://img.freepik.com/free-photo/close-up-portrait-young-beautiful-attractive-tender-ginger-redhair-girl-happy-smiling-digital-tab_1258-116829.jpg?t=st=1717580778~exp=1717584378~hmac=4244435a42262d8c4069b332f34aca3fd5e5fa5ece2dff80d65e4fe1fc998c46&w=826',
-    'https://img.freepik.com/free-photo/excited-girl-love-christmas-holidays-receiving-presents-holding-lovely-new-year-gift-smiling-joy_1258-126419.jpg?t=st=1717580830~exp=1717584430~hmac=67d3bb286df9da732ecc741aca3195aacf7d053a8f2fa5b076ec3679a984fa4b&w=826',
-    'https://img.freepik.com/free-photo/fun-people-concept-headshot-portrait-charming-ginger-red-hair-girl-with-freckles-smiling-making-ok-sign-with-finger-pastel-blue-background-copy-space_1258-128512.jpg?t=st=1717580858~exp=1717584458~hmac=723724bbb2b6327e90283f53b337392da079822380145171e86055c3eab031e0&w=826'
+    'assets/images/s1.jpg',
+    'assets/images/s2.jpg',
+    'assets/images/s3.jpg'
 ];
 
 /* Example icons
@@ -165,22 +197,23 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <span>
-        <img src="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000" style="width:30px;height: 30px;"></span>
-        <a class="navbar-brand" href="#"></a>
+    <nav class="navbar navbar-expand-lg navbar-light bg-primary fixed-top">
+
+        <a class="navbar-brand text-light" href="#" style="font-family: fantasy;">दुकानदार स्वास्थ ऍप</a>
        <a class="nav-link dropdown-toggle navbar-toggler" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <img src="<?php echo $row['filepath']; ?>" alt="Profile" class="profile-picture">
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
-            <a class="dropdown-item" href="#">Profile</a>
-            <a class="dropdown-item" href="#">Settings</a>
+            <a class="dropdown-item" href="profile.php">Profile</a>
+            <a class="dropdown-item" href="generate_pin.php">Account Manage</a>
             <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="#">Logout</a>
+            <a class="dropdown-item" href="login_verify.php">Logout</a>
         </div>
     </nav>
-    
-    <br>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
     <div class="container">
         <div id="dynamic-banner" class="carousel slide" data-ride="carousel">
             <div class="carousel-inner" id="carousel-inner">
@@ -196,15 +229,14 @@ document.addEventListener('DOMContentLoaded', () => {
             </a>
         </div>
         <hr>
-        <h5 class="text-center">Services</h5><hr>
+        
+        <h4 class="text-center text-dark">Today Collection :- &#8377;<?php echo $am; ?></h4><hr>
         <div class="d-flex flex-wrap justify-content-center" id="icon-section">
-            <!-- Icons will be inserted dynamically here -->
-            <div class="d-flex flex-wrap justify-content-center" id="icon-section">
             <!-- Icons will be inserted dynamically here -->
             <div class="icon">
                 <div class="container">
                     <a href="User_panel_web_application.php">
-                    <img src="assets/images/home.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/home.png" alt="home">
                     </a>
                     <p class="text-center">Home</p>
                 </div>
@@ -212,123 +244,130 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="icon">
                 <div class="container">
                     <a href="benefit.php">
-                    <img src="assets/images/inr.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/benefit.png" alt="home">
                     </a>
-                    <p class="text-center">बेनिफिट्स</p>
+                    <p class="text-center">Benefits</p>
                 </div>
             </div>
+            <?php
+                if($temp=='CR'){
+            ?>
             <div class="icon">
                 <div class="container">
                     <a href="wallet.php">
-                    <img src="assets/images/savings.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/wallet.png" alt="home">
                     </a>
-                    <p class="text-center">वॉलेट</p>
+                    <p class="text-center">Wallet</p>
                 </div>
             </div>
+            <?php
+                }
+            ?>
             <div class="icon">
                 <div class="container">
                     <a href="transaction.php">
-                    <img src="assets/images/3d-report.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/transaction.png" alt="home">
                     </a>
-                    <p class="text-center">ट्रांज़ैक्शन</p>
+                    <p class="text-center">Transaction</p>
                 </div>
             </div>
             <div class="icon">
                 <div class="container">
                     <a href="profile.php">
-                    <img src="assets/images/profile.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/profile.png" alt="home">
                     </a>
-                    <p class="text-center">प्रोफाइल</p>
-                </div>
-            </div>
-            <div class="icon">
-                <div class="container">
-                    <a href="#">
-                    <img src="assets/images/growth.png" alt="home" style="width:55px;height:55px;">
-                    </a>
-                    <p class="text-center">Today Sell</p>
+                    <p class="text-center">Profile</p>
                 </div>
             </div>
 
+            <?php
+                if($temp == 'ED'){
+            ?>
+            <div class="icon">
+                <div class="container">
+                    <a href="#">
+                    <img src="assets/images/growth.png" alt="home">
+                    </a>
+                    <p class="text-center">Collection</p>
+                </div>
+            </div>
             <div class="icon">
                 <div class="container">
                     <a href="user_register.php">
-                    <img src="assets/images/add-user.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/add-user.png" alt="home">
                     </a>
                     <p class="text-center">Refer</p>
                 </div>
             </div>
+            
             <div class="icon">
                 <div class="container">
                     <a href="collect.php">
-                    <img src="assets/images/payment.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/money.png" alt="home">
                     </a>
                     <p class="text-center">Collect</p>
                 </div>
             </div>
+            <?php
+            }
+            ?>
             <div class="icon">
                 <div class="container">
                     <a href="termandcondition.php">
-                    <img src="assets/images/handshake.png" alt="tc" style="width:55px;height:55px;">
+                    <img src="assets/images/policy.png" alt="tc">
                     </a>
-                    <p class="text-center">T&C</p>
+                    <p class="text-center">Policy</p>
                 </div>
             </div>
-            
-        </div>
             
         </div>
     </div>
     <hr>
     
-    
-
-
 
     <div class="container">
-    <div class="table-responsive">
-      <table class="table">
-        <th><tr>
+        <div class="alert alert-success">Total Collection <?php echo "Rs.".$row['wallet_balance']; ?> Till : <?php echo date('l jS \of F Y'); ?></div>
+    <div class="table-responsive border-primary">
+        <table class="table">
+        <thead class="primary">
             <td>No.</td>
-            <td>Name</td>
             <td>ID</td>
             <td>Date</td>
             <td>Amount</td>
-            <td>Collected By</td>
-        </tr>
-        </th>
+            <td>To Pay</td>
+        </thead>
+        
+    <?php 
+    $id = $row['customer_id'];
+    $stmt = $conn->prepare("SELECT * FROM transaction WHERE partner_id = ?");
+    $stmt->bind_param('s', $id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+
+    if($res->num_rows>0){
+        $i=1;
+        while($tow = $res->fetch_assoc()) {
+
+      
+        echo '
         <tr>
-            <td>1</td>
-            <td>Abhishek Dangi</td>
-            <td>123456</td>
-            <td>05-Jun-2024</td>
-            <td class="text-success"><i class="fa fa-inr"></i>1000</td>
-            <td>Sanju Vishwkarma</td>
+            <td>'.$i.'</td>
+            <td>'.$tow['customer_id'].'</td>
+            <td>'.$tow['tdate'].'</td>
+            <td class="text-success"><i class="fa fa-inr">&#8377;</i>'.$tow['amount'].'</td>
+            <td>'.$tow['collected_by'].'</td>
+            </tr>';
+            $i++;
+            }
+        }else{
+            echo '<td colspan="5" class="text-danger text-center">No Records ('.date("l jS \of F Y").')</td>';
+        }
+        ?>
         </tr>
-        <tr>
-            <td>1</td>
-            <td>Abhishek Dangi</td>
-            <td>123456</td>
-            <td>05-Jun-2024</td>
-            <td class="text-success"><i class="fa fa-inr"></i>1000</td>
-            <td>Sanju Vishwkarma</td>
-        </tr>
-        <tr>
-            <td>1</td>
-            <td>Abhishek Dangi</td>
-            <td>123456</td>
-            <td>05-Jun-2024</td>
-            <td class="text-success"><i class="fa fa-inr"></i>1000</td>
-            <td>Sanju Vishwkarma</td>
-        </tr>
-      </table>
+    </table>
     </div></div>
     <br><hr><br>
-    <footer class="footer bg-dark text-center py-3">
-        <div class="container">
-            <span>&copy; <span id="year"></span> <?php echo $shop_name; ?>. All rights reserved.</span>
-        </div>
-    </footer>
+   
 
    
 
@@ -336,30 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <script src = "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js">
 
 
-    	<!-- footer
-
-    	 <footer class="footer">
-        <div class="container">
-            <div class="row text-center">
-                <div class="col">
-                    <a href="#"><i class="fas fa-home"></i></a>
-                </div>
-                <div class="col">
-                    <a href="#"><i class="fas fa-credit-card"></i></a>
-                </div>
-                <div class="col">
-                    <a href="#"><i class="fas fa-wallet"></i></a>
-                </div>
-                <div class="col">
-                    <a href="#"><i class="fas fa-qrcode"></i></a>
-                </div>
-                <div class="col">
-                    <a href="#"><i class="fas fa-question-circle"></i></a>
-                </div>
-            </div>
-        </div>
-    </footer>-->
-
+    	
     <script src="scripts.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>

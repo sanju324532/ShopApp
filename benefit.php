@@ -6,12 +6,39 @@ if($_SESSION['email'] == ""){
 }
 
 $email = $_SESSION['email'];
-$res = mysqli_query($conn, "SELECT * FROM customer WHERE email = '$email'");
-if(mysqli_num_rows($res)>0){
-    $row = mysqli_fetch_assoc($res);
+$password = $_SESSION['password'];
+$stmt = $conn->prepare("SELECT * FROM customer WHERE email = ?");
+$stmt->bind_param('s', $email);
+$stmt->execute();
+$result = $stmt->get_result();
+if($row = $result->fetch_assoc()){
+    if(!password_verify($password, $row['password'])){
+        header('Location:login_verify.php');
+    }
 }else{
-    header('Location: login_verify.php');
+    header('Location:login_verify.php');
 }
+
+$filter_array = array($row['customer_id']);
+$temp = $filter_array[0][0].$filter_array[0][1];
+
+
+
+$ud = "".date('d-m-Y');
+$pid = $row['customer_id'];
+$stmt = $conn->prepare("SELECT amount FROM transaction WHERE partner_id = ? AND tdate = ?");
+$stmt->bind_param('ss', $pid, $ud);
+$stmt->execute();
+$ji = $stmt->get_result();
+if($ji->num_rows>0){
+    $am=0;
+    while($pow = $ji->fetch_assoc()){
+        $am+=$pow['amount'];
+    }
+}else{
+    $am=0;
+}
+
 
 ?>
 
@@ -21,10 +48,10 @@ if(mysqli_num_rows($res)>0){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive Web Application</title>
+    <title><?php echo $row['name']; ?></title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000">
+    <link rel="icon" href="assets/images/shoplogo.png">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
@@ -109,9 +136,9 @@ if(mysqli_num_rows($res)>0){
 
 // Example banner images
 const bannerImages = [
-    'https://img.freepik.com/free-photo/close-up-portrait-young-beautiful-attractive-tender-ginger-redhair-girl-happy-smiling-digital-tab_1258-116829.jpg?t=st=1717580778~exp=1717584378~hmac=4244435a42262d8c4069b332f34aca3fd5e5fa5ece2dff80d65e4fe1fc998c46&w=826',
-    'https://img.freepik.com/free-photo/excited-girl-love-christmas-holidays-receiving-presents-holding-lovely-new-year-gift-smiling-joy_1258-126419.jpg?t=st=1717580830~exp=1717584430~hmac=67d3bb286df9da732ecc741aca3195aacf7d053a8f2fa5b076ec3679a984fa4b&w=826',
-    'https://img.freepik.com/free-photo/fun-people-concept-headshot-portrait-charming-ginger-red-hair-girl-with-freckles-smiling-making-ok-sign-with-finger-pastel-blue-background-copy-space_1258-128512.jpg?t=st=1717580858~exp=1717584458~hmac=723724bbb2b6327e90283f53b337392da079822380145171e86055c3eab031e0&w=826'
+    'assets/images/s1.jpg',
+    'assets/images/s2.jpg',
+    'assets/images/s3.jpg'
 ];
 
 /* Example icons
@@ -165,22 +192,23 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <span>
-        <img src="https://img.icons8.com/?size=100&id=sSqpW97QE6ny&format=png&color=000000" style="width:30px;height: 30px;"></span>
-        <a class="navbar-brand" href="#"></a>
+    <nav class="navbar navbar-expand-lg navbar-light bg-primary fixed-top">
+
+        <a class="navbar-brand text-light" href="#" style="font-family: fantasy;">दुकानदार स्वास्थ ऍप</a>
        <a class="nav-link dropdown-toggle navbar-toggler" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <img src="<?php echo $row['filepath']; ?>" alt="Profile" class="profile-picture">
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
-            <a class="dropdown-item" href="#">Profile</a>
-            <a class="dropdown-item" href="#">Settings</a>
+            <a class="dropdown-item" href="profile.php">Profile</a>
+            <a class="dropdown-item" href="generate_pin.php">Account Manage</a>
             <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="#">Logout</a>
+            <a class="dropdown-item" href="login_verify.php">Logout</a>
         </div>
     </nav>
-    
-    <br>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
     <div class="container">
         <div id="dynamic-banner" class="carousel slide" data-ride="carousel">
             <div class="carousel-inner" id="carousel-inner">
@@ -196,15 +224,20 @@ document.addEventListener('DOMContentLoaded', () => {
             </a>
         </div>
         <hr>
-        <h5 class="text-center">Services</h5><hr>
+        <?php if($temp == 'CR'){?>
+        <h4 class="text-center text-dark">Balance :- &#8377;<?php echo $row['wallet_balance']; ?></h4>
+        <?php }
+        else if($temp == 'ED'){
+        ?>
+        <h4 class="text-center text-dark">Today Collection :- &#8377;<?php echo $am; ?></h4>
+        <?php } ?>
+        <hr>
         <div class="d-flex flex-wrap justify-content-center" id="icon-section">
-            <!-- Icons will be inserted dynamically here -->
-            <div class="d-flex flex-wrap justify-content-center" id="icon-section">
             <!-- Icons will be inserted dynamically here -->
             <div class="icon">
                 <div class="container">
                     <a href="User_panel_web_application.php">
-                    <img src="assets/images/home.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/home.png" alt="home">
                     </a>
                     <p class="text-center">Home</p>
                 </div>
@@ -212,74 +245,97 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="icon">
                 <div class="container">
                     <a href="#">
-                    <img src="assets/images/inr.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/benefit.png" alt="home">
                     </a>
-                    <p class="text-center">बेनिफिट्स</p>
+                    <p class="text-center">Benefits</p>
                 </div>
             </div>
+            <?php
+                if($temp=='CR'){
+            ?>
             <div class="icon">
                 <div class="container">
                     <a href="wallet.php">
-                    <img src="assets/images/savings.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/wallet.png" alt="home">
                     </a>
-                    <p class="text-center">वॉलेट</p>
+                    <p class="text-center">Wallet</p>
                 </div>
             </div>
+            <?php
+                }
+            ?>
             <div class="icon">
                 <div class="container">
                     <a href="transaction.php">
-                    <img src="assets/images/3d-report.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/transaction.png" alt="home">
                     </a>
-                    <p class="text-center">ट्रांज़ैक्शन</p>
+                    <p class="text-center">Transaction</p>
                 </div>
             </div>
             <div class="icon">
                 <div class="container">
                     <a href="profile.php">
-                    <img src="assets/images/profile.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/profile.png" alt="home">
                     </a>
-                    <p class="text-center">प्रोफाइल</p>
-                </div>
-            </div>
-            <div class="icon">
-                <div class="container">
-                    <a href="sell.php">
-                    <img src="assets/images/growth.png" alt="home" style="width:55px;height:55px;">
-                    </a>
-                    <p class="text-center">Today Sell</p>
+                    <p class="text-center">Profile</p>
                 </div>
             </div>
 
+            <?php
+                if($temp == 'ED'){
+            ?>
+            <div class="icon">
+                <div class="container">
+                    <a href="sell.php">
+                    <img src="assets/images/growth.png" alt="home">
+                    </a>
+                    <p class="text-center">Collection</p>
+                </div>
+            </div>
             <div class="icon">
                 <div class="container">
                     <a href="user_register.php">
-                    <img src="assets/images/add-user.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/add-user.png" alt="home">
                     </a>
                     <p class="text-center">Refer</p>
                 </div>
             </div>
+            
             <div class="icon">
                 <div class="container">
                     <a href="collect.php">
-                    <img src="assets/images/payment.png" alt="home" style="width:55px;height:55px;">
+                    <img src="assets/images/money.png" alt="home">
                     </a>
                     <p class="text-center">Collect</p>
                 </div>
             </div>
+            <?php
+            }
+            ?>
             <div class="icon">
                 <div class="container">
                     <a href="termandcondition.php">
-                    <img src="assets/images/handshake.png" alt="tc" style="width:55px;height:55px;">
+                    <img src="assets/images/policy.png" alt="tc">
                     </a>
-                    <p class="text-center">T&C</p>
+                    <p class="text-center">Policy</p>
                 </div>
             </div>
             
         </div>
-            
-        </div>
     </div>
     <hr>
+
+
+ 
+
+
+
+
+
+
+
+
+    
     <div class = "container mt-3">   
         <div class = "toast show p-2">  
             <div class = "toast-header">  
@@ -288,33 +344,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>  
                 <div class = "toast-body">  
                 <section class="modal-container-body rtf">
-            <span>Quarum ambarum rerum cum medicinam pollicetur, luxuriae licentiam pollicetur.</span>
+            <span class="text-danger">1.कैंसर </span>
 
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Unum nescio, quo modo possit, si luxuriosus sit, finitas cupiditates habere. Hoc est non modo cor non habere, sed ne palatum quidem. Sic, et quidem diligentius saepiusque ista loquemur inter nos agemusque communiter. Paulum, cum regem Persem captum adduceret, eodem flumine invectio? Quid igitur dubitamus in tota eius natura quaerere quid sit effectum? Duo Reges: constructio interrete. </p>
+            <p><?php echo $shop_name; ?> कैंसर से संबंधित लाभ प्रदान करता है, जिससे प्रभावित व्यक्तियों और उनके परिवारों को आवश्यक सहायता और संसाधन प्राप्त हो सकें। हम चिकित्सा सहायता, परामर्श सेवाएं, और वित्तीय सहायता प्रदान करके उनके संघर्ष को कम करने का प्रयास करते हैं। हमारा उद्देश्य है कि प्रत्येक व्यक्ति को सर्वोत्तम उपचार और देखभाल मिले ताकि वे इस चुनौतीपूर्ण समय का सामना कर सकें और बेहतर भविष्य की ओर बढ़ सकें।</p>
 
-            <span>Ut proverbia non nulla veriora sint quam vestra dogmata.</span>
+            <span class="text-danger">2.हार्टाटैक</span>
 
-            <p>Quasi vero, inquit, perpetua oratio rhetorum solum, non etiam philosophorum sit. Tria genera cupiditatum, naturales et necessariae, naturales et non necessariae, nec naturales nec necessariae. Sin aliud quid voles, postea. Consequatur summas voluptates non modo parvo, sed per me nihilo, si potest; </p>
+            <p><?php echo $shop_name; ?> हार्ट अटैक से संबंधित विभिन्न लाभ प्रदान करता है। हमारे द्वारा प्रदान किए जाने वाले लाभों में चिकित्सा सहायता, उपचार और पुनर्वास सेवाएं शामिल हैं। हमारा उद्देश्य आपके स्वास्थ्य को सुरक्षित और संजीवनी देना है ताकि आप बेफिक्र होकर जीवन का आनंद ले सकें।</p>
 
-            <p>Cur igitur easdem res, inquam, Peripateticis dicentibus verbum nullum est, quod non intellegatur? Primum in nostrane potestate est, quid meminerimus? Eam tum adesse, cum dolor omnis absit; Quodsi ipsam honestatem undique pertectam atque absolutam. Aliam vero vim voluptatis esse, aliam nihil dolendi, nisi valde pertinax fueris, concedas necesse est. Nec enim, cum tua causa cui commodes, beneficium illud habendum est, sed faeneratio, nec gratia deberi videtur ei, qui sua causa commodaverit. Universa enim illorum ratione cum tota vestra confligendum puto. Sed residamus, inquit, si placet. Sed vobis voluptatum perceptarum recordatio vitam beatam facit, et quidem corpore perceptarum. Itaque primos congressus copulationesque et consuetudinum instituendarum voluntates fieri propter voluptatem; Ita enim se Athenis collocavit, ut sit paene unus ex Atticis, ut id etiam cognomen videatur habiturus. Atque hoc loco similitudines eas, quibus illi uti solent, dissimillimas proferebas. </p>
 
-            <span>An hoc usque quaque, aliter in vita?</span>
-            <ol>
-                <li>Etenim nec iustitia nec amicitia esse omnino poterunt, nisi ipsae per se expetuntur.</li>
-                <li>Pisone in eo gymnasio, quod Ptolomaeum vocatur, unaque nobiscum Q.</li>
-                <li>Certe nihil nisi quod possit ipsum propter se iure laudari.</li>
-                <li>Itaque e contrario moderati aequabilesque habitus, affectiones ususque corporis apti esse ad naturam videntur.</li>
-            </ol>
+            <span class="text-danger">3. एड्स </span>
 
-            <p>Utilitatis causa amicitia est quaesita. Qui autem de summo bono dissentit de tota philosophiae ratione dissentit. Quamquam non negatis nos intellegere quid sit voluptas, sed quid ille dicat. Sed emolumenta communia esse dicuntur, recte autem facta et peccata non habentur communia. Hoc positum in Phaedro a Platone probavit Epicurus sensitque in omni disputatione id fieri oportere. Potius inflammat, ut coercendi magis quam dedocendi esse videantur. Roges enim Aristonem, bonane ei videantur haec: vacuitas doloris, divitiae, valitudo; Totum autem id externum est, et quod externum, id in casu est. Non autem hoc: igitur ne illud quidem. Simul atque natum animal est, gaudet voluptate et eam appetit ut bonum, aspernatur dolorem ut malum. Quamquam tu hanc copiosiorem etiam soles dicere. Quid enim necesse est, tamquam meretricem in matronarum coetum, sic voluptatem in virtutum concilium adducere? Hoc positum in Phaedro a Platone probavit Epicurus sensitque in omni disputatione id fieri oportere. Videsne quam sit magna dissensio? </p>
+            <p><?php echo $shop_name; ?> एड्स से संबंधित लाभ प्रदान करता है, जिसमें निःशुल्क चिकित्सा परामर्श, आवश्यक दवाएं, और मानसिक स्वास्थ्य समर्थन शामिल है। हमारा उद्देश्य एड्स से पीड़ित व्यक्तियों को संपूर्ण स्वास्थ्य और कल्याण में मदद करना है, ताकि वे जीवन को बेहतर और स्वस्थ तरीके से जी सकें।</p>
 
-            <span>Claudii libidini, qui tum erat summo ne imperio, dederetur.</span>
+            <span class="text-danger">4. दुर्घटना में हाथ पैर कट जाने की सर्जरी </span>
 
-            <p>Eorum enim est haec querela, qui sibi cari sunt seseque diligunt. Cum audissem Antiochum, Brute, ut solebam, cum M. An obliviscimur, quantopere in audiendo in legendoque moveamur, cum pie, cum amice, cum magno animo aliquid factum cognoscimus? Qui igitur convenit ab alia voluptate dicere naturam proficisci, in alia summum bonum ponere? Magni enim aestimabat pecuniam non modo non contra leges, sed etiam legibus partam. Haec mirabilia videri intellego, sed cum certe superiora firma ac vera sint, his autem ea consentanea et consequentia, ne de horum quidem est veritate dubitandum. At, illa, ut vobis placet, partem quandam tuetur, reliquam deserit. Sed utrum hortandus es nobis, Luci, inquit, an etiam tua sponte propensus es? Sed est forma eius disciplinae, sicut fere ceterarum, triplex: una pars est naturae, disserendi altera, vivendi tertia. Nemo enim est, qui aliter dixerit quin omnium naturarum simile esset id, ad quod omnia referrentur, quod est ultimum rerum appetendarum. Quid est, quod ab ea absolvi et perfici debeat? Quod cum accidisset ut alter alterum necopinato videremus, surrexit statim. Tantum dico, magis fuisse vestrum agere Epicuri diem natalem, quam illius testamento cavere ut ageretur. Quod iam a me expectare noli. Quod totum contra est. Semper enim ita adsumit aliquid, ut ea, quae prima dederit, non deserat. </p>
+            <p><?php echo $shop_name; ?> दुर्घटना में हाथ पैर कट जाने की सर्जरी से संबंधित सभी प्रकार के लाभ प्रदान करता है। हमारे लाभों में उच्चतम गुणवत्ता की सर्जरी, विशेष पुनर्वास सेवाएं, और वित्तीय सहायता शामिल हैं, ताकि पीड़ित व्यक्ति शीघ्र ही स्वस्थ हो सकें और अपनी सामान्य दिनचर्या में वापस आ सकें। </p>
 
-            <span>Sed nimis multa.</span>
+            <span class="text-danger">5. बिजली गिरने से छतिग्रस्त होने पर</span>
 
-            <p>Nec vero alia sunt quaerenda contra Carneadeam illam sententiam. Negat enim summo bono afferre incrementum diem. Causa autem fuit huc veniendi ut quosdam hinc libros promerem. Deinde prima illa, quae in congressu solemus: Quid tu, inquit, huc? Minime vero probatur huic disciplinae, de qua loquor, aut iustitiam aut amicitiam propter utilitates adscisci aut probari. Nulla profecto est, quin suam vim retineat a primo ad extremum. Sed ad illum redeo. Quem quidem vos, cum improbis poenam proponitis, inpetibilem facitis, cum sapientem semper boni plus habere vultis, tolerabilem. Huic ego, si negaret quicquam interesse ad beate vivendum quali uteretur victu, concederem, laudarem etiam; Non igitur de improbo, sed de callido improbo quaerimus, qualis Q. His singulis copiose responderi solet, sed quae perspicua sunt longa esse non debent. Quae cum ita sint, effectum est nihil esse malum, quod turpe non sit. </p>
+            <p><?php echo $shop_name; ?> बिजली गिरने से होने वाले नुकसान के लिए विशेष लाभ प्रदान करता है। इस लाभ के तहत, आपके घर या संपत्ति को बिजली गिरने से हुए नुकसान की मरम्मत और पुनर्स्थापन के लिए आर्थिक सहायता प्रदान की जाती है। हमारा उद्देश्य है कि आप प्राकृतिक आपदाओं के कारण उत्पन्न होने वाले कठिन समय में आर्थिक सुरक्षा और समर्थन प्राप्त कर सकें। हम आपके साथ हर कदम पर हैं, ताकि आप अपने जीवन को फिर से सामान्य स्थिति में ला सकें।</p>
+
+            <span class="text-danger">6.किडनी चेंज </span>
+
+            <p><?php echo $shop_name; ?> किडनी प्रत्यारोपण से संबंधित लाभ प्रदान करता है। हम किडनी प्रत्यारोपण के लिए वित्तीय सहायता, चिकित्सा देखभाल, और परामर्श सेवाएं उपलब्ध कराते हैं। हमारा लक्ष्य है कि हर जरूरतमंद मरीज को समय पर और उचित चिकित्सा सुविधाएं मिल सकें। हम आपके स्वस्थ और उज्ज्वल भविष्य की कामना करते हैं।</p>
+
+            <span class="text-danger">7 लीवर चेंज</span>
+
+            <p><?php echo $shop_name; ?> किडनी प्रत्यारोपण से संबंधित लाभ प्रदान करता है। हम किडनी प्रत्यारोपण के लिए वित्तीय सहायता, चिकित्सा देखभाल, और परामर्श सेवाएं उपलब्ध कराते हैं। हमारा लक्ष्य है कि हर जरूरतमंद मरीज को समय पर और उचित चिकित्सा सुविधाएं मिल सकें। हम आपके स्वस्थ और उज्ज्वल भविष्य की कामना करते हैं।</p>
+
+
+            <span class="text-danger">8 एबोला बायरस</span>
+
+            <p><?php echo $shop_name; ?> एबोला वायरस से संबंधित लाभ प्रदान करता है, जिससे प्रभावित व्यक्तियों को चिकित्सा सहायता, वित्तीय सहायता, और आवश्यक संसाधन उपलब्ध कराए जाते हैं। हम रोगियों और उनके परिवारों के लिए परामर्श सेवाएं भी प्रदान करते हैं, ताकि वे इस कठिन समय में मानसिक और भावनात्मक समर्थन प्राप्त कर सकें। हमारा लक्ष्य है कि एबोला वायरस से प्रभावित हर व्यक्ति को संपूर्ण देखभाल और समर्थन मिले, जिससे वे स्वस्थ और सुरक्षित जीवन जी सकें।</p>
+
+            <span class="text-danger">9.स्मेलपॉक्स</span>
+
+            <p><?php echo $shop_name; ?> स्मॉलपॉक्स से संबंधित व्यापक लाभ प्रदान करता है। हम प्रभावित व्यक्तियों को उच्च गुणवत्ता वाली स्वास्थ्य सेवाएं, आर्थिक सहायता, और मानसिक स्वास्थ्य समर्थन प्रदान करने के लिए प्रतिबद्ध हैं। हमारा लक्ष्य है कि हर मरीज को सबसे बेहतरीन उपचार और देखभाल मिल सके, ताकि वे जल्द से जल्द स्वस्थ हो सकें और सामान्य जीवन जी सकें।</p>
 
             <button type = "button" class = "btn btn-primary" data-bs-dismiss = "toast">Close Benefits</button>
 
@@ -323,12 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>  
     </div>   
     <br><hr><br>
-    <footer class="footer bg-dark text-center py-3">
-        <div class="container">
-            <span>&copy; <span id="year"></span> <?php echo $shop_name; ?>. All rights reserved.</span>
-        </div>
-    </footer>
-
    
 
 <link href = "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel = "stylesheet"> 
